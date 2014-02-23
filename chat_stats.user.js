@@ -16,7 +16,8 @@
  * Contributors:
  *     /u/redopium
  *
- * Inspired by https://github.com/jpgohlke/twitch-chat-filter/
+ * Much of the design is adapted from https://github.com/jpgohlke/twitch-chat-filter/
+ * Thank you to all contributors to the above repository.
  */
  
  /* global unsafeWindow:false */ 
