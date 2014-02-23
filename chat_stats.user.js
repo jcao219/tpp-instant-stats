@@ -30,6 +30,7 @@
 // --- Script Configuration ---
 
 var MAX_INPUT_HISTORY = 200;
+var UPDATE_INTERVAL = 500; // ms
 
 // --- Greasemonkey loading ---
 
@@ -46,13 +47,33 @@ var $ = myWindow.jQuery;
 
 // --- Display ---
 
-var top_thing = $("#ember735");
-$("<span style='font-weight:bold;'>Past "+MAX_INPUT_HISTORY+" Commands</span>"+
-"<br/>"+
-"<span id='input-stats'/>"+
-"<br/>"+
-"<input id='custom-stats-code' type='text' value='anarchy/democracy'>"+
-"<span id='custom-stats'/>").insertBefore(top_thing);
+$("<style type='text/css'>"+
+".chart div div {"+
+"  font: 10px sans-serif;"+
+"  background-color: steelblue;"+
+"  text-align: right;"+
+"  margin: 0px;"+
+"  color: white;"+
+"  display: inline-block;"+
+"}"+
+".chart div span {"+
+"  font: 10px sans-serif;"+
+"  width: 50px;"+
+"  padding-right: 2px;"+
+"  text-align: right;"+
+"  display: inline-block;"+
+"}"+
+".chart div {"+
+"  font: 10px sans-serif;"+
+"  width: 100%;"+
+"  margin: 2px;"+
+"  white-space:nowrap;"+
+"}"+
+"</style>").appendTo("head");
+
+var top_thing = $(".dynamic-player");
+$("<span style='font-weight:bold;'>Latest "+MAX_INPUT_HISTORY+" Commands</span>"+
+"<div class='chart' id='input-stats'/>").insertAfter(top_thing);
 
 // --- Main ---
 var initialize_stats = function() {
@@ -94,17 +115,10 @@ var initialize_stats = function() {
     myWindow.setInterval(function() {
         var stats_str = []; 
         $.each(inputCounts, function(button, count) { 
-            stats_str.push(button + ": " + count);
+            stats_str.push("<div><span>"+button+"</span><div style='width: " + Math.max(count*5, 4) + "px;'>" + count + "</div></div>");
         });
-        $("#input-stats").html(stats_str.join(", "));
-
-        // try to evaluate the custom code, with the inputCounts as the context
-        var custom_code = $("#custom-stats-code").val();
-        try {$("#custom-stats").html("&nbsp" + ((
-            new Function("with(this) { return " + custom_code + "; }")).call(inputCounts)).toString());
-        }
-        catch(e) {$("#custom-stats").html("&nbsp;invalid expression");}
-    }, 500);
+        $("#input-stats").html(stats_str.join(""));
+    }, UPDATE_INTERVAL);
 }
 
 $(function(){
