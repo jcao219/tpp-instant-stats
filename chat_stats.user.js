@@ -46,13 +46,13 @@ var $ = myWindow.jQuery;
 
 // --- Display ---
 
-var top_thing = $("#broadcast-meta");
+var top_thing = $("#ember735");
 $("<span style='font-weight:bold;'>Past "+MAX_INPUT_HISTORY+" Commands</span>"+
 "<br/>"+
 "<span id='input-stats'/>"+
 "<br/>"+
 "<input id='custom-stats-code' type='text' value='anarchy/democracy'>"+
-"<span id='custom-stats'/>").insertAfter(top_thing);
+"<span id='custom-stats'/>").insertBefore(top_thing);
 
 // --- Main ---
 var initialize_stats = function() {
@@ -90,7 +90,7 @@ var initialize_stats = function() {
         __icl.apply(myWindow.CurrentChat, [e]);
     };
     
-    // update display every 1000ms
+    // update display every 500ms
     myWindow.setInterval(function() {
         var stats_str = []; 
         $.each(inputCounts, function(button, count) { 
@@ -104,7 +104,7 @@ var initialize_stats = function() {
             new Function("with(this) { return " + custom_code + "; }")).call(inputCounts)).toString());
         }
         catch(e) {$("#custom-stats").html("&nbsp;invalid expression");}
-    }, 1000);
+    }, 500);
 }
 
 $(function(){
