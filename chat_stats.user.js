@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name        Twitch Plays Pokemon Instant Input Statistics
-// @namespace   https://github.com/jpgohlke/twitch-chat-filter
+// @namespace   https://github.com/jcao219/tpp-instant-stats
 // @description Instant input statistics.
 // @include     http://www.twitch.tv/twitchplayspokemon
 // @include     http://www.twitch.tv/twitchplayspokemon/
 // @version     1.0
-// @updateURL   https://raw.github.com/jpgohlke/twitch-chat-filter/master/chat_filter.user.js
+// @updateURL   https://raw.github.com/jcao219/tpp-instant-stats/master/chat_stats.user.js
 // @grant       unsafeWindow
 // ==/UserScript==
 
@@ -15,58 +15,93 @@
  * Feel free to improve this script and then add your name to this following list!
  * Contributors:
  *     /u/redopium
+ *
+ * Inspired by https://github.com/jpgohlke/twitch-chat-filter/
  */
  
+ /* global unsafeWindow:false */ 
  
  
 (function() {
-    "use strict";
-    var inputCounts = {
-        up: 0,
-        down: 0,
-        left: 0,
-        right: 0,
-        a: 0,
-        b: 0,
-        start: 0,
-        democracy: 0,
-        anarchy: 0
-    };
-    
-    var pastInputs = [];
+"use strict";
 
-    var TOP_THING = $("#broadcast-meta");
-    $("<span style='font-weight:bold;'>Past 200 Commands</span>"+
-    "<br/>"+
-    "<span id='input-stats'/>"+
-    "<br/>"+
-    "<input id='custom-stats-code' type='text' value='anarchy/democracy'>"+
-    "<span id='custom-stats'/>").insertAfter(TOP_THING);
 
-    var __icl = CurrentChat.insert_chat_line;
-    CurrentChat.insert_chat_line = function(e) { 
-        for(var button in inputCounts) {
-            if(CurrentChat.format_message(e).trim().match(new RegExp("^" + button + "$", "i"))) {
-                inputCounts[button]++;
-                pastInputs.push(button);
-                while(pastInputs.length > 200)
-                    inputCounts[pastInputs.shift()]--;
-                break;
-            }
+// --- Script Configuration ---
+
+var MAX_INPUT_HISTORY = 200;
+
+// --- Greasemonkey loading ---
+
+// Greasemonkey userscripts run in a separate environment and cannot use
+// global variables from the page directly. We need to access them via unsafeWindow
+var myWindow;
+try{
+    myWindow = unsafeWindow;
+}catch(e){
+    myWindow = window;
+}
+
+var $ = myWindow.jQuery;
+
+// --- Display ---
+
+var top_thing = $("#broadcast-meta");
+$("<span style='font-weight:bold;'>Past "+MAX_INPUT_HISTORY+" Commands</span>"+
+"<br/>"+
+"<span id='input-stats'/>"+
+"<br/>"+
+"<input id='custom-stats-code' type='text' value='anarchy/democracy'>"+
+"<span id='custom-stats'/>").insertAfter(top_thing);
+
+// --- Main ---
+
+var inputCounts = {
+    up: 0,
+    down: 0,
+    left: 0,
+    right: 0,
+    a: 0,
+    b: 0,
+    start: 0,
+    democracy: 0,
+    anarchy: 0
+};
+
+// keep track of past inputs so that we can erase the oldest inputs
+var pastInputs = [];
+
+// keep a copy of the old insert_chat_line method so we can call it
+var __icl = myWindow.CurrentChat.insert_chat_line;
+
+// replace the insert_chat_line method
+myWindow.CurrentChat.insert_chat_line = function(e) { 
+    for(var button in inputCounts) {
+        if(myWindow.CurrentChat.format_message(e).trim().match(new RegExp("^" + button + "$", "i"))) {
+            inputCounts[button]++;
+            // erase everything older than MAX_INPUT_HISTORY
+            pastInputs.push(button);
+            while(pastInputs.length > MAX_INPUT_HISTORY)
+                inputCounts[pastInputs.shift()]--;
+            break;
         }
-        __icl.apply(CurrentChat, [e]);
-    };
+    }
+    // call the original insert_chat_line method
+    __icl.apply(CurrentChat, [e]);
+};
 
-    setInterval(function() {
-        var stats_str = []; 
-        $.each(inputCounts, function(button, count) { 
-            stats_str.push(button + ": " + count);
-        });
-        $("#input-stats").html(stats_str.join(", "));
-        var custom_code = $("#custom-stats-code").val();
-        try {$("#custom-stats").html("&nbsp" + ((
-            new Function("with(this) { return " + custom_code + "; }")).call(inputCounts)).toString());
-        }
-        catch(e) {$("#custom-stats").html("&nbsp;invalid expression");}
-    }, 1000);
+// update display every 1000ms
+myWindow.setInterval(function() {
+    var stats_str = []; 
+    $.each(inputCounts, function(button, count) { 
+        stats_str.push(button + ": " + count);
+    });
+    $("#input-stats").html(stats_str.join(", "));
+
+    // try to evaluate the custom code, with the inputCounts as the context
+    var custom_code = $("#custom-stats-code").val();
+    try {$("#custom-stats").html("&nbsp" + ((
+        new Function("with(this) { return " + custom_code + "; }")).call(inputCounts)).toString());
+    }
+    catch(e) {$("#custom-stats").html("&nbsp;invalid expression");}
+}, 1000);
 })();
