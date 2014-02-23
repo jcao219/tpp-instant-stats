@@ -4,7 +4,7 @@
 // @description Instant input statistics.
 // @include     http://www.twitch.tv/twitchplayspokemon
 // @include     http://www.twitch.tv/twitchplayspokemon/
-// @version     1.1
+// @version     1.2
 // @updateURL   https://raw.github.com/jcao219/tpp-instant-stats/master/chat_stats.user.js
 // @grant       unsafeWindow
 // ==/UserScript==
