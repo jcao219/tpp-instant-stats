@@ -87,7 +87,7 @@ var initialize_stats = function() {
             }
         }
         // call the original insert_chat_line method
-        __icl.apply(CurrentChat, [e]);
+        __icl.apply(myWindow.CurrentChat, [e]);
     };
     
     // update display every 1000ms
